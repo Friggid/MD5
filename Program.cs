@@ -36,7 +36,21 @@ namespace MD5
             while (userInput != 2)
             {
                 userInput = DisplayMenu();
+
+                if (userInput == 0)
+                {
+                    Console.WriteLine("-----------------------");
+                    Console.WriteLine("Negalimas pasirinkimas!");
+                    Console.WriteLine("-----------------------");
+                }
+                else if (userInput == 1)
+                {
+                    Console.WriteLine("EINAM Y MD5!");
+                    break;
+                }
             }
+
+            
 
             DelayedShutdown();
         }
@@ -53,7 +67,17 @@ namespace MD5
             Console.WriteLine();
             Console.Write("Pasirinkimas: ");
             var result = Console.ReadLine();
-            return Convert.ToInt32(result);
+
+            if (result == "1")
+            {
+                return Convert.ToInt32(result);
+            }
+            if (result == "2")
+            {
+                return 2;
+            }
+
+            return 0;
         }
 
         //Bitu israsymas is nuskaityto failo y string 
