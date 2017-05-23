@@ -12,18 +12,46 @@ namespace MD5
             Console.WriteLine("Pasirinkite sifravimo algoritma ir spauskite ENTER: ");
             Console.WriteLine();
             Console.WriteLine("1. MD5");
-            Console.WriteLine("2. Exit");
+            Console.WriteLine("2. Išjungti");
             Console.WriteLine();
             Console.Write("Pasirinkimas: ");
             var result = Console.ReadLine();
 
             if (result == "1")
             {
-                return Convert.ToInt32(result);
+                return 1;
             }
             if (result == "2")
             {
                 return 2;
+            }
+
+            return 0;
+        }
+
+        //Rodyti pasirinkimu meniu 
+        public static int DisplayWrite()
+        {
+            Console.WriteLine("Pasirinkite kur išvesti rezultatą ir spauskite ENTER: ");
+            Console.WriteLine();
+            Console.WriteLine("1. Į konsolę");
+            Console.WriteLine("2. Į ekraną");
+            Console.WriteLine("3. Išjungti");
+            Console.WriteLine();
+            Console.Write("Pasirinkimas: ");
+            var result = Console.ReadLine();
+
+            if (result == "1")
+            {
+                return 1;
+            }
+            if (result == "2")
+            {
+                return 2;
+            }
+            if (result == "3")
+            {
+                return 3;
             }
 
             return 0;
@@ -56,7 +84,7 @@ namespace MD5
         public static void DelayedShutdown()
         {
             Console.WriteLine();
-            Console.Write("Shutting down");
+            Console.Write("Programa uždaroma");
             for (int i = 0; i < 4; i++)
             {
                 Thread.Sleep(600);

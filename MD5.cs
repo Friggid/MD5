@@ -2,7 +2,7 @@
 
 namespace MD5
 {
-    public class MD5
+    public class Md5
     {
         //Lentelė K kuri turi 64 lemenetus. 
         //Ši lentelė yra sugeneruota iš anksto, 
@@ -31,7 +31,6 @@ namespace MD5
         // X yra skirtas paversti duomenis iš 512 bitų gabaliukų į 16 bitų žodį.
         protected readonly uint[] X = new uint[16];
 
-        // Gauname antspaudą
         Digest fingerPrint;
 
         public string FingerPrint => fingerPrint.ToString();
@@ -41,21 +40,10 @@ namespace MD5
 
         public byte [] ValueAsByte
         {
-            get
-            {
-                byte[] bt = new byte[_byteInput.Length];
-
-                for (int i = 0; i < _byteInput.Length; i++)
-                {
-                    bt[i] = _byteInput[i];
-                }
-
-                return bt;
-            }
             set
             {
                 _byteInput = new byte[value.Length];
-                for (int i = 0; i < value.Length; i++)
+                for (var i = 0; i < value.Length; i++)
                 {
                     _byteInput[i] = (byte)value[i];
                 }
@@ -137,15 +125,13 @@ namespace MD5
             }
         }
 
-        public static uint ReverseByte(uint uiNumber)
+        static uint ReverseByte(uint uiNumber)
         {
-            return (((uiNumber & 0x000000ff) << 24) |
-                        (uiNumber >> 24) |
-                    ((uiNumber & 0x00ff0000) >> 8) |
-                    ((uiNumber & 0x0000ff00) << 8));
+            return  ((uiNumber & 0x000000ff) << 24) | (uiNumber >> 24) |
+                    ((uiNumber & 0x00ff0000) >> 8) | ((uiNumber & 0x0000ff00) << 8);
         }
 
-        public static uint RotateLeft(uint number, ushort shift)
+        static uint RotateLeft(uint number, ushort shift)
         {
             return (number >> 32 - shift) | (number << shift);
         }
@@ -227,21 +213,21 @@ namespace MD5
 
         void TransF(ref uint a, uint b, uint c, uint d, uint k, ushort s, uint i)
         {
-            a = b + RotateLeft((a + ((b & c) | (~(b) & d)) + X[k] + K[i - 1]), s);
+            a = b + RotateLeft(a + ((b & c) | (~b & d)) + X[k] + K[i - 1], s);
         }
 
         void TransG(ref uint a, uint b, uint c, uint d, uint k, ushort s, uint i)
         {
-            a = b + RotateLeft((a + ((b & d) | (c & ~d)) + X[k] + K[i - 1]), s);
+            a = b + RotateLeft(a + ((b & d) | (c & ~d)) + X[k] + K[i - 1], s);
         }
 
         void TransH(ref uint a, uint b, uint c, uint d, uint k, ushort s, uint i)
         {
-            a = b + RotateLeft((a + (b ^ c ^ d) + X[k] + K[i - 1]), s);
+            a = b + RotateLeft(a + (b ^ c ^ d) + X[k] + K[i - 1], s);
         }
         void TransI(ref uint a, uint b, uint c, uint d, uint k, ushort s, uint i)
         {
-            a = b + RotateLeft((a + (c ^ (b | ~d)) + X[k] + K[i - 1]), s);
+            a = b + RotateLeft(a + (c ^ (b | ~d)) + X[k] + K[i - 1], s);
         }
     }
 }

@@ -12,16 +12,20 @@ namespace MD5
         private static OpenFileDialog _fileDialog;
 
         [STAThread]
-        static void Main()
+        public static void Main()
         {
-            Console.WriteLine("Opening file selection...");
+            FileStream ostrm;
+            StreamWriter writer;
+            TextWriter oldOut = Console.Out;
+
+            Console.WriteLine("Atidaromas failo pasirinkimas...");
             Console.WriteLine();
 
             try
             {
                 _fileDialog = new OpenFileDialog();
                 _fileDialog.ShowDialog();
-                Console.WriteLine("Selected file: " + _fileDialog.SafeFileName);
+                Console.WriteLine("Pasirinktas failas: " + _fileDialog.SafeFileName);
                 Console.WriteLine();
 
                 _byteArray = File.ReadAllBytes(_fileDialog.FileName);
@@ -31,11 +35,11 @@ namespace MD5
             }
             catch (Exception e)
             {
-                Console.WriteLine("Huston, we have a problem..." + "\n" + e.Message);
+                Console.WriteLine("Pasirinktas blogas failas..." + "\n" + e.Message);
                 Helpers.DelayedShutdown();
             }
 
-            int userInput = 0;
+            var userInput = 0;
             while (userInput != 2)
             {
                 userInput = Helpers.DisplayMenu();
@@ -43,23 +47,69 @@ namespace MD5
                 if (userInput == 0)
                 {
                     Console.WriteLine("-----------------------");
-                    Console.WriteLine("Wrong choice!");
+                    Console.WriteLine("Tokio pasirinkimo nėra!");
                     Console.WriteLine("-----------------------");
                 }
                 else if (userInput == 1)
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Intense calculations...");
-                    Console.WriteLine();
 
-                    MD5 md5 = new MD5();
+                    var userWriteout = Helpers.DisplayWrite();
 
-                    md5.ValueAsByte = _byteArray;
-                    Console.WriteLine("MD5 hash: " + md5.FingerPrint);
+                    while (userWriteout != 3)
+                    {
+                        Md5 md5 = new Md5();
+                        md5.ValueAsByte = _byteArray;
 
-                    //Console.WriteLine(Md5.OutString(_byteArray.ToString()));
-                    Console.ReadLine();
-                    break;
+                        if (userWriteout == 3)
+                        {
+                            Helpers.DelayedShutdown();
+                        }
+                        else if (userWriteout == 1)
+                        {
+                            // Write to console
+                            Console.WriteLine("MD5 reikšmė: " + md5.FingerPrint);
+                            Console.WriteLine();
+                            Console.WriteLine("Spauskite ENTER, kad uždarytumėte programą.");
+                            Console.ReadLine();
+                            break;
+                        }
+                        else if (userWriteout == 2)
+                        {
+                            // Write to file
+                            try
+                            {
+                                ostrm = new FileStream(".\\test.txt", FileMode.OpenOrCreate, FileAccess.Write);
+                                writer = new StreamWriter(ostrm);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Neišeina atidaryti failo rašymui");
+                                Console.WriteLine(e.Message);
+                                return;
+                            }
+
+                            Console.SetOut(writer);
+                            Console.WriteLine("MD5 reikšmė: " + md5.FingerPrint);
+                            Console.SetOut(oldOut);
+
+                            writer.Close();
+                            ostrm.Close();
+
+                            Console.WriteLine();
+                            Console.WriteLine("Spauskite ENTER, kad uždarytumėte programą.");
+                            Console.ReadLine();
+                            break;
+                        }
+
+                        Console.WriteLine("-----------------------");
+                        Console.WriteLine("Tokio pasirinkimo nėra!");
+                        Console.WriteLine("-----------------------");
+
+                        userWriteout = Helpers.DisplayWrite();
+                    }
+
+                    Helpers.DelayedShutdown();
                 }
             }
 
