@@ -1,119 +1,74 @@
 ﻿using System;
 using System.IO;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms;
 
 namespace MD5
 {
-    class Program
+    static class Program
     {
-        private static byte[] _byteArray = null;
-        private static OpenFileDialog _fileDialog;
+        static byte[] _byteArray;
 
-        [STAThread]
-        public static void Main()
+        public static void Main(string[] args)
         {
-            FileStream ostrm;
-            StreamWriter writer;
-            TextWriter oldOut = Console.Out;
-
-            Console.WriteLine("Atidaromas failo pasirinkimas...");
-            Console.WriteLine();
-
-            try
+            if (args != null && args.Length > 0)
             {
-                _fileDialog = new OpenFileDialog();
-                _fileDialog.ShowDialog();
-                Console.WriteLine("Pasirinktas failas: " + _fileDialog.SafeFileName);
-                Console.WriteLine();
-
-                _byteArray = File.ReadAllBytes(_fileDialog.FileName);
-
-                Helpers.PrintByteArray(_byteArray);
-                Console.WriteLine();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Pasirinktas blogas failas..." + "\n" + e.Message);
-                Helpers.DelayedShutdown();
-            }
-
-            var userInput = 0;
-            while (userInput != 2)
-            {
-                userInput = Helpers.DisplayMenu();
-
-                if (userInput == 0)
+                if (args[0] == "0")
                 {
-                    Console.WriteLine("-----------------------");
-                    Console.WriteLine("Tokio pasirinkimo nėra!");
-                    Console.WriteLine("-----------------------");
-                }
-                else if (userInput == 1)
-                {
-                    Console.WriteLine();
-
-                    var userWriteout = Helpers.DisplayWrite();
-
-                    while (userWriteout != 3)
+                    if (File.Exists(args[1]))
                     {
-                        Md5 md5 = new Md5();
-                        md5.ValueAsByte = _byteArray;
-
-                        if (userWriteout == 3)
-                        {
-                            Helpers.DelayedShutdown();
-                        }
-                        else if (userWriteout == 1)
-                        {
-                            // Write to console
-                            Console.WriteLine("MD5 reikšmė: " + md5.FingerPrint);
-                            Console.WriteLine();
-                            Console.WriteLine("Spauskite ENTER, kad uždarytumėte programą.");
-                            Console.ReadLine();
-                            break;
-                        }
-                        else if (userWriteout == 2)
-                        {
-                            // Write to file
-                            try
-                            {
-                                ostrm = new FileStream(".\\test.txt", FileMode.OpenOrCreate, FileAccess.Write);
-                                writer = new StreamWriter(ostrm);
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine("Neišeina atidaryti failo rašymui");
-                                Console.WriteLine(e.Message);
-                                return;
-                            }
-
-                            Console.SetOut(writer);
-                            Console.WriteLine("MD5 reikšmė: " + md5.FingerPrint);
-                            Console.SetOut(oldOut);
-
-                            writer.Close();
-                            ostrm.Close();
-
-                            Console.WriteLine();
-                            Console.WriteLine("Spauskite ENTER, kad uždarytumėte programą.");
-                            Console.ReadLine();
-                            break;
-                        }
-
-                        Console.WriteLine("-----------------------");
-                        Console.WriteLine("Tokio pasirinkimo nėra!");
-                        Console.WriteLine("-----------------------");
-
-                        userWriteout = Helpers.DisplayWrite();
+                        _byteArray = File.ReadAllBytes(args[1]);
+                        Console.WriteLine();
+                        Console.WriteLine("MD5 reikšmė: " + Md5.Out(_byteArray));
+                        Console.WriteLine();
                     }
+                    else
+                    {
+                        Console.WriteLine("Įvesties failas neegzistuoja");
+                    }
+                }
+                else if (args[0] == "1")
+                {
+                    if (File.Exists(args[1]))
+                    {
+                        _byteArray = File.ReadAllBytes(args[1]);
 
-                    Helpers.DelayedShutdown();
+                        if (args.Length > 2)
+                        {
+                            string path = @".\" + args[2];
+
+                            using (StreamWriter sw = File.AppendText(path))
+                            {
+                                sw.WriteLine(Md5.Out(_byteArray));
+                                Console.WriteLine("MD5 reikšmė įvesta į failą: " + args[2]);
+                                sw.Close();
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Išvesties failas neegzistuoja");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Įvesties failas neegzistuoja");
+                    }
+                }
+                else
+                {
+                    if (File.Exists(args[0]))
+                    {
+                        _byteArray = File.ReadAllBytes(args[0]);
+                        Console.WriteLine();
+                        Console.WriteLine("MD5 reikšmė: " + Md5.Out(_byteArray));
+                        Console.WriteLine();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Įvesties failas neegzistuoja");
+                    }
                 }
             }
 
-            Helpers.DelayedShutdown();
+            Console.ReadLine();
         }
     }
 }
