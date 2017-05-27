@@ -17,7 +17,7 @@ namespace MD5
                     {
                         _byteArray = File.ReadAllBytes(args[1]);
                         Console.WriteLine();
-                        Console.WriteLine("MD5 reikšmė: " + Md5.Out(_byteArray));
+                        Console.WriteLine("MD5 reikšmė: " + Md5.ComputeHash(_byteArray));
                         Console.WriteLine();
                     }
                     else
@@ -37,7 +37,7 @@ namespace MD5
 
                             using (StreamWriter sw = File.AppendText(path))
                             {
-                                sw.WriteLine(Md5.Out(_byteArray));
+                                sw.WriteLine(Md5.ComputeHash(_byteArray));
                                 Console.WriteLine("MD5 reikšmė įvesta į failą: " + args[2]);
                                 sw.Close();
                             }
@@ -58,7 +58,7 @@ namespace MD5
                     {
                         _byteArray = File.ReadAllBytes(args[0]);
                         Console.WriteLine();
-                        Console.WriteLine("MD5 reikšmė: " + Md5.Out(_byteArray));
+                        Console.WriteLine("MD5 reikšmė: " + Md5.ComputeHash(_byteArray));
                         Console.WriteLine();
                     }
                     else
