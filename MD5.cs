@@ -2,6 +2,9 @@
 
 namespace MD5
 {
+    // Algoritmas paremtas RFC 1321 ir Wikipedia pseudo implementacija
+    // RFC 1321 - https://tools.ietf.org/html/rfc1321
+    // Wikipedia MD5 - https://en.wikipedia.org/wiki/MD5#Algorithm
     public static class Md5
     {
         // Algoritmas veikias 128-bitu busenoje, 
@@ -60,18 +63,31 @@ namespace MD5
         private const int S43 = 15;
         private const int S44 = 21;
 
-        // Gauname nuskaitytus is failo baitus kaip input
+        // Gauname nuskaitytus is failo baitus kaip input masyva
         public static string ComputeHash(byte[] input)
         {
-            byte[] digest = Md5Array(input);
+            byte[] digest = MainCalc(input);
             return ArrayToHexString(digest);
         }
 
-        private static byte[] Md5Array(byte[] input)
+        // Perduodame pagrindiam skaičiavimų metodui nuskaitytą baitų masyvą.
+        // Pirmiausia bus vykdomas Append metodas.
+        // Toliau bus vykdomas Transformacijų metodas.
+        // Galiausiai sutvarkytas masyvas bus perduotas atgal į ComputeHash metodą.
+        private static byte[] MainCalc(byte[] input)
         {
-            uint[] block = MD5_Append(input);
-            uint[] bits = MD5_Trasform(block);
+            //var shit = TestAppend(input);
+            uint[] block = Append(input);
+            uint[] bits = Trasform(block);
 
+            // Sukuriame tuščia byte masyvą išvedimui. Kuriam paduodame keturias transformuotas reikšmes.
+            /*
+             * word A: 01 23 45 67
+             * word B: 89 ab cd ef
+             * word C: fe dc ba 98
+             * word D: 76 54 32 10
+             * */
+             // Sukame masyvą 4 kartus po keturis elementus ir viską išrašome į output bitais.
             byte[] output = new byte[bits.Length * 4];
             for (int i = 0, j = 0; i < bits.Length; i++, j += 4)
             {
@@ -83,77 +99,89 @@ namespace MD5
             return output;
         }
 
-        private static uint[] MD5_Append(byte[] input)
+        // Input yra padidinamas taip, kad jo ilgis butu lygus 448 % 512.
+        // Padidinimas vyksta visada, net kai ilgis iškart yra lygus 448 % 512.
+        private static uint[] Append(byte[] input)
         {
-            int zeros;
-            int ones = 1;
+            // Cia bus laikomas padidintas input masyvas.
             int size;
+            // Nuskaitomas paduoto input masyvo dydis.
             int n = input.Length;
+            // Liekana dalijant input masyvo dydį.
+            // Ją naudoju naudosime tam, kad nusakyti kokio dydžio išeities masyvas turėtų būti.
+            // Pvz jeigu liekana yra mažesnė nei 56 tilpsime į 64 baitų masyvą.
+            // Jeigu liekana didesnė už 56 tilpsime į 128 ar 256 ir t.t. masyvą.
             int m = n % 64;
 
             if (m < 56)
             {
-                zeros = 55 - m;
                 size = n - m + 64;
-            }
-            else if (m == 56)
-            {
-                zeros = 0;
-                ones = 0;
-                size = n + 8;
             }
             else
             {
-                zeros = 63 - m + 56;
                 size = n + 64 - m + 64;
             }
 
-            ArrayList bs = new ArrayList(input);
+            ArrayList paddedInput = new ArrayList(input);
 
-            if (ones == 1)
+            // Vienetas yra pridedamas į input masyvo pabaigą.
+            paddedInput.Add((byte)0x80);
+
+            // Po vieneto yra pridedama tiek nuliu, kiek reikia, kad
+            // input masyvo ilgis taptų lygus 448 % 512.
+            while (paddedInput.Count % 64 != 56)
             {
-                bs.Add((byte)0x80);
-            }
-            for (int i = 0; i < zeros; i++)
-            {
-                bs.Add((byte)0);
+                paddedInput.Add((byte)0x00);
             }
 
-            var N = (ulong)n * 8;
-            byte h1 = (byte)(N & 0xFF);
-            byte h2 = (byte)((N >> 8) & 0xFF);
-            byte h3 = (byte)((N >> 16) & 0xFF);
-            byte h4 = (byte)((N >> 24) & 0xFF);
-            byte h5 = (byte)((N >> 32) & 0xFF);
-            byte h6 = (byte)((N >> 40) & 0xFF);
-            byte h7 = (byte)((N >> 48) & 0xFF);
-            byte h8 = (byte)(N >> 56);
-            bs.Add(h1);
-            bs.Add(h2);
-            bs.Add(h3);
-            bs.Add(h4);
-            bs.Add(h5);
-            bs.Add(h6);
-            bs.Add(h7);
-            bs.Add(h8);
-            byte[] ts = (byte[])bs.ToArray(typeof(byte));
+            // Prie praeito padding'o pridedamas 64 bitų nepakeisto dydžio input masyvas, kurio ilgis, kaip prieš padding'ą.
+            var oldSize = (ulong)n * 8;
+            byte h1 = (byte)(oldSize & 0xFF);
+            byte h2 = (byte)((oldSize >> 8) & 0xFF);
+            byte h3 = (byte)((oldSize >> 16) & 0xFF);
+            byte h4 = (byte)((oldSize >> 24) & 0xFF);
+            byte h5 = (byte)((oldSize >> 32) & 0xFF);
+            byte h6 = (byte)((oldSize >> 40) & 0xFF);
+            byte h7 = (byte)((oldSize >> 48) & 0xFF);
+            byte h8 = (byte)(oldSize >> 56);
+            paddedInput.Add(h1);
+            paddedInput.Add(h2);
+            paddedInput.Add(h3);
+            paddedInput.Add(h4);
+            paddedInput.Add(h5);
+            paddedInput.Add(h6);
+            paddedInput.Add(h7);
+            paddedInput.Add(h8);
+            byte[] paddingComplete = (byte[])paddedInput.ToArray(typeof(byte));
 
             uint[] output = new uint[size / 4];
             for (long i = 0, j = 0; i < size; j++, i += 4)
             {
-                output[j] = (uint)(ts[i] | ts[i + 1] << 8 | ts[i + 2] << 16 | ts[i + 3] << 24);
+                output[j] = (uint)(paddingComplete[i] | paddingComplete[i + 1] << 8 | paddingComplete[i + 2] << 16 | paddingComplete[i + 3] << 24);
             }
+
+            // Rezultate turime naują žinutę, kurios ilgis yra tam tikras kiekis 16 (32 bitų) žodžių.
             return output;
         }
 
-        private static uint[] MD5_Trasform(uint[] x)
+        // Transformacijos funkcija, kuriai paduodamas padidintas input masyvas.
+        // Toliau yra vykdomos transformacijos su paduotu masyvu. 
+        private static uint[] Trasform(uint[] appendedInputBlock)
         {
+            var x = appendedInputBlock;
+
             for (int k = 0; k < x.Length; k += 16)
             {
+                // Gauname statinius šešiolikaitnius žodžius, kuriuos naudosime bitų maskavimui.
                 var a = _a;
                 var b = _b;
                 var c = _c;
                 var d = _d;
+
+                // Kiekvieno transformacijos raundo metu paduodame statinius kintamuosius(a, b, c,d),
+                // kartu su padidintu input masyvu(x). Kiek kartų reikės sukti - S kintamieji.
+                // Ir taip pat paduodame konstantas žodžių, kurie maskuoja elementus - K masyvas. 
+
                 /* Raundas 1, transformacija 1 - 16 */
                 FF(ref a, b, c, d, x[k + 0], S11, K[0]);
                 FF(ref d, a, b, c, x[k + 1], S12, K[1]);
@@ -222,6 +250,7 @@ namespace MD5
                 II(ref d, a, b, c, x[k + 11], S42, K[61]);
                 II(ref c, d, a, b, x[k + 2], S43, K[62]);
                 II(ref b, c, d, a, x[k + 9], S44, K[63]);
+
                 _a += a;
                 _b += b;
                 _c += c;
@@ -230,10 +259,20 @@ namespace MD5
             return new uint[] { _a, _b, _c, _d };
         }
 
+        // Aprašomos keturios funkcijos F, G, H, I, 
+        // kurios priima tris 32 bitų žodžius, ir kartu išveda vieną 32 bitų žodį.
+        /*
+         * F(X,Y,Z) = XY v not(X) Z
+         * G(X,Y,Z) = XZ v Y not(Z)
+         * H(X,Y,Z) = X xor Y xor Z
+         * I(X,Y,Z) = Y xor (X v not(Z))
+         */
         private static void FF(ref uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
+            // Šis funkcionalumas aprašytas RFC 1321, kaip
+            // a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s)
             a = a + F(b, c, d) + x + t;
-            // Dokumentacijoje nurodytas pasukimas y kaire
+            // Dokumentacijoje nurodytas pasukimas į kairę(leftRotate)
             a = a << s | a >> (32 - s);
             a += b;
         }
@@ -244,7 +283,7 @@ namespace MD5
         private static void GG(ref uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
             a = a + G(b, c, d) + x + t;
-            // Dokumentacijoje nurodytas pasukimas y kaire
+            // Dokumentacijoje nurodytas pasukimas į kairę(leftRotate)
             a = a << s | a >> (32 - s);
             a += b;
         }
@@ -255,7 +294,7 @@ namespace MD5
         private static void HH(ref uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
             a = a + H(b, c, d) + x + t;
-            // Dokumentacijoje nurodytas pasukimas y kaire
+            // Dokumentacijoje nurodytas pasukimas į kairę(leftRotate)
             a = a << s | a >> (32 - s);
             a += b;
         }
@@ -265,21 +304,27 @@ namespace MD5
         private static void II(ref uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
             a = a + I(b, c, d) + x + t;
-            // Dokumentacijoje nurodytas pasukimas y kaire
+            // Dokumentacijoje nurodytas pasukimas į kairę(leftRotate)
             a = a << s | a >> (32 - s);
             a += b;
         }
 
         private static uint I(uint x, uint y, uint z) { return y ^ (x | ~z); }
 
-        private static string ArrayToHexString(byte[] array)
+        // Paduodamas jau pertvarkytas input masyvas ir pagal pasirinktą formatą (x2 - mažosiomis raidėmis),
+        // išvedamas hash rezultatas atgal į main funkciją.
+        private static string ArrayToHexString(byte[] digestedInput)
         {
             string hexString = "";
+            // x(šešioliktainis) 2(dvi raidės) išveda string'ą, kaip dvi mažasias šešioliktaines raides.
             string format = "x2";
-            foreach (byte b in array)
+
+            // Einame per sutvarkyta masyva 
+            foreach (byte b in digestedInput)
             {
                 hexString += b.ToString(format);
             }
+
             return hexString;
         }
     }
