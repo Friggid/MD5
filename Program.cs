@@ -3,18 +3,25 @@ using System.IO;
 
 namespace MD5
 {
+    // Programa nr.10 (MD5)
+    // Atliko Tautvydas Milčiūnas IT 3kursas, 2 grupė.
     static class Program
     {
         static byte[] _byteArray;
 
         public static void Main(string[] args)
         {
+            // Tikriname ar gauti argumentai. Neįvedus jokių argumentų programa automatiškai uždaroma.
             if (args != null && args.Length > 0)
             {
+                // Tikriname veikimo rėžimus (0, 1, 2)
+
+                // Rėžimas 0 išveda rezultatą i konsolės langą.
                 if (args[0] == "0")
                 {
                     if (File.Exists(args[1]))
                     {
+                        // Nuskaitome failą.
                         _byteArray = File.ReadAllBytes(args[1]);
                         Console.WriteLine();
                         Console.WriteLine("MD5 reikšmė: " + Md5.ComputeHash(_byteArray));
@@ -25,10 +32,12 @@ namespace MD5
                         Console.WriteLine("Įvesties failas neegzistuoja");
                     }
                 }
+                // Rėžimas 1 išveda rezultatą į pasirinktą failą.
                 else if (args[0] == "1")
                 {
                     if (File.Exists(args[1]))
                     {
+                        // Nuskaitome failą.
                         _byteArray = File.ReadAllBytes(args[1]);
 
                         if (args.Length > 2)
@@ -53,14 +62,17 @@ namespace MD5
                         Console.WriteLine("Įvesties failas neegzistuoja");
                     }
                 }
+                // Rėžimas 2 skirtas testuoti su test vektoriais.
                 else if (args[0] == "2")
                 {
                     if (File.Exists(args[1]))
                     {
+                        // Nuskaitome failo tekstą test vektoriui surasti.
                         var text = File.ReadAllText(args[1]);
 
                         if (text == "abc")
                         {
+                            // Nuskaitome failą.
                             _byteArray = File.ReadAllBytes(args[1]);
 
                             Console.WriteLine("This is a test vector.");
@@ -136,8 +148,12 @@ namespace MD5
                         Console.WriteLine("Įvesties failas neegzistuoja");
                     }
                 }
+                Console.ReadLine();
             }
-            Console.ReadLine();
+            else
+            {
+                Environment.Exit(0);
+            }
         }
     }
 }
